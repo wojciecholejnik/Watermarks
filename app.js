@@ -1,6 +1,6 @@
 const Jimp = require('jimp');
 const inquirer = require('inquirer');
-
+const fs = require('fs');
 
 const addTextWatermarkToImage = async function(inputFile, outputFile, text) {
   const image = await Jimp.read(inputFile);
@@ -64,7 +64,12 @@ const startApp = async () => {
       message: 'Type your watermark text:',
     }])
     options.watermarkText = text.value;
-    addTextWatermarkToImage('./img/' + options.inputImage, './img/' + prepareOutputFilename(options.inputImage), options.watermarkText);
+
+    fs.access('./img/' + options.inputImage, fs.constants.F_OK, (err) => {
+      err ? console.log('File do not exist') :     addTextWatermarkToImage('./img/' + options.inputImage, './img/' + prepareOutputFilename(options.inputImage), options.watermarkText);
+
+    });
+
   }
   else {
     const image = await inquirer.prompt([{
@@ -74,7 +79,18 @@ const startApp = async () => {
       default: 'logo.png',
     }])
     options.watermarkImage = image.filename;
-    addImageWatermarkToImage('./img/' + options.inputImage, './img/' + prepareOutputFilename(options.inputImage), './img/' + options.watermarkImage);
+    fs.access('./img/' + options.inputImage, fs.constants.F_OK, (err) => {
+      err ? console.log('File do not exist') : fs.access('./img/' + image.filename, fs.constants.F_OK, (err) => {
+        err ? console.log('Logo - file do not exist') : addImageWatermarkToImage('./img/' + options.inputImage, './img/' + prepareOutputFilename(options.inputImage), './img/' + options.watermarkImage);
+        ;
+  
+  
+      });;
+
+
+    });
+
+    // addImageWatermarkToImage('./img/' + options.inputImage, './img/' + prepareOutputFilename(options.inputImage), './img/' + options.watermarkImage);
   }
 
 };
