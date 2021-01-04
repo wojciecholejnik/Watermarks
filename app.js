@@ -3,29 +3,39 @@ const inquirer = require('inquirer');
 const fs = require('fs');
 
 const addTextWatermarkToImage = async function(inputFile, outputFile, text) {
-  const image = await Jimp.read(inputFile);
-  const font = await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
-  const textData = {
-    text: text,
-    alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER,
-    alignmentY: Jimp.VERTICAL_ALIGN_MIDDLE,
-  };
-
-  image.print(font, 0, 0, textData, image.getWidth(), image.getHeight());
-  await image.quality(100).writeAsync(outputFile);
+  try {
+    const image = await Jimp.read(inputFile);
+    const font = await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
+    const textData = {
+      text: text,
+      alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER,
+      alignmentY: Jimp.VERTICAL_ALIGN_MIDDLE,
+    };
+  
+    image.print(font, 0, 0, textData, image.getWidth(), image.getHeight());
+    await image.quality(100).writeAsync(outputFile);
+  }
+  catch(error) {
+    console.log(error);
+  }
 };
 
 const addImageWatermarkToImage = async function(inputFile, outputFile, watermarkFile) {
-  const image = await Jimp.read(inputFile);
-  const watermark = await Jimp.read(watermarkFile);
-  const x = image.getWidth() / 2 - watermark.getWidth() / 2;
-  const y = image.getHeight() / 2 - watermark.getHeight() / 2;
+  try {
+    const image = await Jimp.read(inputFile);
+    const watermark = await Jimp.read(watermarkFile);
+    const x = image.getWidth() / 2 - watermark.getWidth() / 2;
+    const y = image.getHeight() / 2 - watermark.getHeight() / 2;
 
-  image.composite(watermark, x, y, {
-    mode: Jimp.BLEND_SOURCE_OVER,
-    opacitySource: 0.5,
-  });
-  await image.quality(100).writeAsync(outputFile);
+    image.composite(watermark, x, y, {
+      mode: Jimp.BLEND_SOURCE_OVER,
+      opacitySource: 0.5,
+    });
+    await image.quality(100).writeAsync(outputFile);
+  }
+  catch(error) {
+    console.log(error);
+  }
 };
 
 const prepareOutputFilename = (filename) => {
@@ -66,8 +76,7 @@ const startApp = async () => {
     options.watermarkText = text.value;
 
     fs.access('./img/' + options.inputImage, fs.constants.F_OK, (err) => {
-      err ? console.log('File do not exist') :     addTextWatermarkToImage('./img/' + options.inputImage, './img/' + prepareOutputFilename(options.inputImage), options.watermarkText);
-
+      err ? console.log('Something went wrong... Try again') :     addTextWatermarkToImage('./img/' + options.inputImage, './img/' + prepareOutputFilename(options.inputImage), options.watermarkText);
     });
 
   }
@@ -80,17 +89,14 @@ const startApp = async () => {
     }])
     options.watermarkImage = image.filename;
     fs.access('./img/' + options.inputImage, fs.constants.F_OK, (err) => {
-      err ? console.log('File do not exist') : fs.access('./img/' + image.filename, fs.constants.F_OK, (err) => {
-        err ? console.log('Logo - file do not exist') : addImageWatermarkToImage('./img/' + options.inputImage, './img/' + prepareOutputFilename(options.inputImage), './img/' + options.watermarkImage);
+      err ? console.log('Something went wrong... Try again') : fs.access('./img/' + image.filename, fs.constants.F_OK, (err) => {
+        err ? console.log('Something went wrong... Try again') : addImageWatermarkToImage('./img/' + options.inputImage, './img/' + prepareOutputFilename(options.inputImage), './img/' + options.watermarkImage);
         ;
-  
-  
       });;
 
 
     });
 
-    // addImageWatermarkToImage('./img/' + options.inputImage, './img/' + prepareOutputFilename(options.inputImage), './img/' + options.watermarkImage);
   }
 
 };
